@@ -51,7 +51,11 @@ if [ ! -f "${APP_DIR}/.env" ]; then
 fi
 
 echo "=== 5. Cài đặt dependencies & build giao diện tối ưu (production) ==="
-npm ci --include=dev
+if [ -f "${APP_DIR}/package-lock.json" ]; then
+  npm ci --include=dev
+else
+  npm install --include=dev
+fi
 npm run build
 
 echo "=== 6. Cấu hình Nginx cho tên miền ${DOMAIN} ==="

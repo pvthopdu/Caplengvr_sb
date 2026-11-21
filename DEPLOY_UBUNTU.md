@@ -33,8 +33,19 @@ sudo chown -R "$USER":"$USER" /var/www/caplenhvr-sb
 
 ---
 
-## 4. Chạy cài đặt tự động (Node.js 22 LTS + Build + Nginx + PM2)
-Trong thư mục `/var/www/caplenhvr-sb`, cấp quyền thực thi và chạy script cài đặt:
+## 4. Chạy cài đặt tự động
+
+### Cách A: Server đã có sẵn phần mềm (Node.js, Nginx, PM2) — *Không cài thêm phần mềm*
+Phù hợp khi máy chủ đã chạy sẵn các website/dịch vụ khác và bạn chỉ muốn triển khai ứng dụng (mặc định **cổng `3008`**, tên miền **`http://caplenhvr-sb.online`**, không chạy `apt-get`, không xóa site Nginx hiện có):
+```bash
+cd /var/www/caplenhvr-sb
+chmod +x deploy/deploy-app.sh
+./deploy/deploy-app.sh
+```
+*(Tùy chỉnh cổng/tên miền: `PORT=3008 DOMAIN=caplenhvr-sb.online ./deploy/deploy-app.sh` hoặc thêm `--skip-nginx` nếu tự cấu hình proxy.)*
+
+### Cách B: Server Ubuntu mới hoàn toàn (tự cài Node.js 22 LTS + Nginx + PM2)
+Trong thư mục `/var/www/caplenhvr-sb`, cấp quyền thực thi và chạy script cài đặt đầy đủ:
 ```bash
 cd /var/www/caplenhvr-sb
 chmod +x deploy/setup-ubuntu.sh
