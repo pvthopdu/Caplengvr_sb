@@ -1,0 +1,29 @@
+# Systemd service tùy chọn (nếu không dùng PM2)
+# Cài đặt:
+#   sudo cp deploy/caplenhvr-sb.service /etc/systemd/system/caplenhvr-sb.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now caplenhvr-sb
+
+[Unit]
+Description=He thong Quan ly Cap lenh VR-SB - So Xay dung Quang Ngai
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/caplenhvr-sb
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=APP_URL=http://caplenhvr-sb.online
+Environment=DOSSIER_STORAGE_DIR=/var/www/caplenhvr-sb/data/ho-so-chuyen
+EnvironmentFile=-/var/www/caplenhvr-sb/.env
+ExecStart=/usr/bin/node /var/www/caplenhvr-sb/server.ts
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=caplenhvr-sb
+
+[Install]
+WantedBy=multi-user.target

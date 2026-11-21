@@ -1,0 +1,134 @@
+{
+  "entities": {
+    "UserAccountProfile": {
+      "title": "UserAccountProfile",
+      "description": "Tài khoản người dùng đăng nhập qua Gmail và thông tin phân quyền bởi quản trị viên pvtho@pdu.edu.vn",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID của người dùng",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "description": "Địa chỉ Gmail đã xác thực",
+          "maxLength": 200
+        },
+        "fullName": {
+          "type": "string",
+          "description": "Họ và tên người dùng",
+          "maxLength": 150
+        },
+        "avatar": {
+          "type": "string",
+          "description": "URL ảnh đại diện Google",
+          "maxLength": 500
+        },
+        "phone": {
+          "type": "string",
+          "description": "Số điện thoại liên hệ",
+          "maxLength": 30
+        },
+        "department": {
+          "type": "string",
+          "description": "Đơn vị / Cơ quan công tác",
+          "maxLength": 200
+        },
+        "role": {
+          "type": "string",
+          "description": "Vai trò phân quyền trong hệ thống cấp lệnh VR-SB",
+          "enum": [
+            "UNASSIGNED",
+            "ADMIN",
+            "LEADER",
+            "DEPT_HEAD",
+            "OFFICER",
+            "CLERK",
+            "PORT_STAFF",
+            "CAPTAIN",
+            "DUTY_OFFICER",
+            "VERIFIER"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "description": "Trạng thái hoạt động của tài khoản",
+          "enum": [
+            "ACTIVE",
+            "LOCKED"
+          ]
+        },
+        "assignedVesselIds": {
+          "type": "array",
+          "description": "Danh sách ID tàu phụ trách (tối đa 10, dành cho Thuyền trưởng)"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Ghi chú của quản trị hệ thống",
+          "maxLength": 500
+        },
+        "assignedByEmail": {
+          "type": "string",
+          "description": "Email quản trị viên thực hiện phân quyền",
+          "maxLength": 200
+        },
+        "assignedAt": {
+          "type": "string",
+          "description": "Thời điểm phân quyền (ISO string)",
+          "maxLength": 64
+        },
+        "lastLogin": {
+          "type": "string",
+          "description": "Thời điểm đăng nhập gần nhất (ISO string)",
+          "maxLength": 64
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Thời điểm tạo tài khoản (serverTimestamp)"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Thời điểm cập nhật gần nhất (serverTimestamp)"
+        }
+      },
+      "required": [
+        "uid",
+        "email",
+        "fullName",
+        "role",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ConnectionHealth": {
+      "title": "ConnectionHealth",
+      "description": "Tài liệu kiểm tra kết nối máy chủ Firestore khi khởi động",
+      "type": "object",
+      "properties": {
+        "ok": {
+          "type": "boolean",
+          "description": "Trạng thái kết nối"
+        }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserAccountProfile"
+      },
+      "description": "Hồ sơ tài khoản Gmail và vai trò phân quyền RBAC do quản trị viên pvtho@pdu.edu.vn quản lý"
+    },
+    "/test/{docId}": {
+      "schema": {
+        "$ref": "#/entities/ConnectionHealth"
+      },
+      "description": "Tài liệu kiểm tra kết nối Firestore khi ứng dụng khởi động"
+    }
+  }
+}

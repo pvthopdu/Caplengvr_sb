@@ -1,0 +1,135 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny catch-all (Safety Net)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    // Super Admin bootstrapped directly by verified Gmail identity
+    function isBootstrapAdmin() {
+      return isSignedIn() && request.auth.token.email.lower() == 'pvtho@pdu.edu.vn';
+    }
+
+    // Admin check (for single-document get/create/update/delete; never inside allow list)
+    function isAdmin() {
+      return isBootstrapAdmin() || (
+        isSignedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN' &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'ACTIVE'
+      );
+    }
+
+    function isValidUserDoc(data) {
+      return data.keys().hasAll(['uid', 'email', 'fullName', 'role', 'status', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly([
+          'uid',
+          'email',
+          'fullName',
+          'avatar',
+          'phone',
+          'department',
+          'role',
+          'status',
+          'assignedVesselIds',
+          'notes',
+          'assignedByEmail',
+          'assignedAt',
+          'lastLogin',
+          'createdAt',
+          'updatedAt'
+        ])
+        && isValidId(data.uid)
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 200
+        && data.fullName is string && data.fullName.size() >= 1 && data.fullName.size() <= 150
+        && data.role in ['UNASSIGNED', 'ADMIN', 'LEADER', 'DEPT_HEAD', 'OFFICER', 'CLERK', 'PORT_STAFF', 'CAPTAIN', 'DUTY_OFFICER', 'VERIFIER']
+        && data.status in ['ACTIVE', 'LOCKED']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp
+        && (!('avatar' in data) || (data.avatar is string && data.avatar.size() <= 500))
+        && (!('phone' in data) || (data.phone is string && data.phone.size() <= 30))
+        && (!('department' in data) || (data.department is string && data.department.size() <= 200))
+        && (!('notes' in data) || (data.notes is string && data.notes.size() <= 500))
+        && (!('assignedByEmail' in data) || (data.assignedByEmail is string && data.assignedByEmail.size() <= 200))
+        && (!('assignedAt' in data) || (data.assignedAt is string && data.assignedAt.size() <= 64))
+        && (!('lastLogin' in data) || (data.lastLogin is string && data.lastLogin.size() <= 64))
+        && (!('assignedVesselIds' in data) || (
+          data.assignedVesselIds is list &&
+          data.assignedVesselIds.size() <= 10 &&
+          (data.assignedVesselIds.size() == 0 || (data.assignedVesselIds[0] is string && data.assignedVesselIds[0].size() <= 64))
+        ));
+    }
+
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isSignedIn() && (request.auth.uid == userId || isAdmin());
+
+      // Secure list query: no get()/exists() lookups; non-admins can only list their own uid record
+      allow list: if isSignedIn() && (isBootstrapAdmin() || resource.data.uid == request.auth.uid);
+
+      // Users register themselves as UNASSIGNED on first Gmail login; pvtho@pdu.edu.vn registers as ADMIN
+      allow create: if isValidId(userId)
+        && isSignedIn()
+        && isValidUserDoc(incoming())
+        && userId == request.auth.uid
+        && incoming().uid == request.auth.uid
+        && incoming().email == request.auth.token.email.lower()
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && (
+          (isBootstrapAdmin() && incoming().role == 'ADMIN' && incoming().status == 'ACTIVE') ||
+          (incoming().role == 'UNASSIGNED' && incoming().status == 'ACTIVE')
+        );
+
+      allow update: if isValidId(userId)
+        && isSignedIn()
+        && isValidUserDoc(incoming())
+        && incoming().uid == existing().uid
+        && incoming().email == existing().email
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          (
+            isAdmin() &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'role', 'status', 'department', 'phone', 'assignedVesselIds',
+              'notes', 'assignedByEmail', 'assignedAt', 'updatedAt', 'fullName',
+              'avatar', 'lastLogin'
+            ])
+          ) ||
+          (
+            request.auth.uid == userId &&
+            incoming().role == existing().role &&
+            incoming().status == existing().status &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['fullName', 'avatar', 'lastLogin', 'updatedAt'])
+          )
+        );
+
+      allow delete: if isValidId(userId)
+        && isAdmin()
+        && userId != request.auth.uid
+        && existing().email.lower() != 'pvtho@pdu.edu.vn';
+    }
+
+    match /test/{docId} {
+      allow get: if isValidId(docId) && isSignedIn() && docId == 'connection';
+      allow list, write: if false;
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "Remix Cấp Lệnh VR-SB Lý Sơn - Quảng Ngãi",
+  "description": "Hệ thống điện tử cấp lệnh vào/rời bến cho phương tiện thủy nội địa cấp VR-SB tuyến Đảo Lớn - Đảo Bé (Lý Sơn), Sở Xây dựng tỉnh Quảng Ngãi.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

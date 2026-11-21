@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+@layer base {
+  html {
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overflow-x: clip;
+  }
+
+  body {
+    font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #07244d;
+    background-color: #edf5fe;
+    overflow-x: clip;
+  }
+
+  .font-mono {
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Chế độ Chữ Lớn (High Readability Zoom) cho Thuyền trưởng / Chủ tàu lớn tuổi & Cán bộ hiện trường */
+.large-font-mode {
+  font-size: 114%;
+}
+
+.large-font-mode input,
+.large-font-mode select,
+.large-font-mode textarea {
+  font-size: 1.05rem !important;
+  line-height: 1.5 !important;
+}
+
+.large-font-mode table th {
+  font-size: 0.875rem !important;
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+}
+
+.large-font-mode table td {
+  font-size: 1rem !important;
+  padding-top: 1.15rem !important;
+  padding-bottom: 1.15rem !important;
+}
+
+.large-font-mode .text-xs {
+  font-size: 0.875rem !important; /* 14px */
+}
+
+.large-font-mode .text-sm {
+  font-size: 1rem !important; /* 16px */
+}
+
+.large-font-mode .text-base {
+  font-size: 1.125rem !important; /* 18px */
+}
+
+.large-font-mode .text-lg {
+  font-size: 1.25rem !important; /* 20px */
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
