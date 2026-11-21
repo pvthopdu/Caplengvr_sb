@@ -111,9 +111,14 @@ fi
 
 echo "=== 3. CÀI THƯ VIỆN NODE & BUILD GIAO DIỆN PRODUCTION ==="
 if [ -f "${APP_DIR}/package-lock.json" ]; then
-  npm ci --include=dev
+  npm ci --include=dev --no-audit --no-fund
 else
-  npm install --include=dev
+  npm install --include=dev --no-audit --no-fund
+fi
+if [ ! -f "${APP_DIR}/node_modules/express/index.js" ]; then
+  echo "[Cảnh báo] node_modules/express chưa đầy đủ, đang cài lại sạch node_modules..."
+  rm -rf "${APP_DIR}/node_modules"
+  npm install --include=dev --no-audit --no-fund
 fi
 npm run build
 
