@@ -48,7 +48,7 @@ done
 STORAGE_DIR="${APP_DIR}/data/ho-so-chuyen"
 LOGS_DIR="${APP_DIR}/logs"
 ENV_FILE="${APP_DIR}/.env"
-LOCAL_PM2_CONFIG="${APP_DIR}/deploy/ecosystem.local.cjs"
+LOCAL_PM2_CONFIG="${APP_DIR}/deploy/ecosystem.local.json"
 LOCAL_NGINX_CONFIG="${APP_DIR}/deploy/nginx-${DOMAIN}.local.conf"
 
 echo "=== KIỂM TRA MÔI TRƯỜNG HIỆN CÓ (KHÔNG CÀI ĐẶT PHẦN MỀM MỚI) ==="
@@ -129,15 +129,14 @@ else
 fi
 
 if command -v pm2 >/dev/null 2>&1; then
-  cat > "${LOCAL_PM2_CONFIG}" <<EOF
-module.exports = {
-  apps: [
-    {
+  rm -f "${APP_DIR}/deploy/ecosystem.local.cjs"
+  node -e "
+    const fs = require('fs');
+    const appCfg = {
       name: 'caplenhvr-sb',
-      script: '${PM2_SCRIPT}',
-      ${PM2_ARGS:+args: '${PM2_ARGS}',}
+      script: process.argv[1],
       interpreter: 'node',
-      cwd: '${APP_DIR}',
+      cwd: process.argv[3],
       instances: 1,
       exec_mode: 'fork',
       autorestart: true,
@@ -145,18 +144,20 @@ module.exports = {
       max_memory_restart: '750M',
       env: {
         NODE_ENV: 'production',
-        PORT: ${APP_PORT},
-        APP_URL: 'http://${DOMAIN}',
-        DOSSIER_STORAGE_DIR: '${STORAGE_DIR}',
+        PORT: Number(process.argv[4]),
+        APP_URL: 'http://' + process.argv[5],
+        DOSSIER_STORAGE_DIR: process.argv[6],
       },
       time: true,
       merge_logs: true,
-      out_file: '${LOGS_DIR}/out.log',
-      error_file: '${LOGS_DIR}/error.log',
-    },
-  ],
-};
-EOF
+      out_file: process.argv[7] + '/out.log',
+      error_file: process.argv[7] + '/error.log',
+    };
+    if (process.argv[2]) {
+      appCfg.args = process.argv[2];
+    }
+    fs.writeFileSync(process.argv[8], JSON.stringify({ apps: [appCfg] }, null, 2) + '\n');
+  " "${PM2_SCRIPT}" "${PM2_ARGS}" "${APP_DIR}" "${APP_PORT}" "${DOMAIN}" "${STORAGE_DIR}" "${LOGS_DIR}" "${LOCAL_PM2_CONFIG}"
   pm2 startOrRestart "${LOCAL_PM2_CONFIG}" --update-env
   pm2 save
   echo "[OK] Đã khởi động/cập nhật ứng dụng qua PM2 (caplenhvr-sb -> cổng ${APP_PORT})."

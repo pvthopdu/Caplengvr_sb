@@ -9,5 +9,6 @@
 /data/
 /logs/
 deploy/ecosystem.local.cjs
+deploy/ecosystem.local.json
 deploy/*.local.conf
 

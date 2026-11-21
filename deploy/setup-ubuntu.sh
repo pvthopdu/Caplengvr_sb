@@ -70,10 +70,10 @@ sudo systemctl restart nginx
 
 echo "=== 7. Khởi động ứng dụng qua PM2 ==="
 if [ "${APP_DIR}" != "/var/www/caplenhvr-sb" ]; then
-  sed "s|/var/www/caplenhvr-sb|${APP_DIR}|g" "${APP_DIR}/deploy/ecosystem.config.cjs" > "${APP_DIR}/deploy/ecosystem.local.cjs"
-  pm2 startOrRestart "${APP_DIR}/deploy/ecosystem.local.cjs"
+  sed "s|/var/www/caplenhvr-sb|${APP_DIR}|g" "${APP_DIR}/deploy/ecosystem.config.json" > "${APP_DIR}/deploy/ecosystem.local.json"
+  pm2 startOrRestart "${APP_DIR}/deploy/ecosystem.local.json" --update-env
 else
-  pm2 startOrRestart "${APP_DIR}/deploy/ecosystem.config.cjs"
+  pm2 startOrRestart "${APP_DIR}/deploy/ecosystem.config.json" --update-env
 fi
 pm2 save
 echo "Để PM2 tự khởi động cùng Ubuntu, hãy chạy lệnh do 'pm2 startup' in ra."
