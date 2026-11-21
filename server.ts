@@ -26,20 +26,43 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 function resolveFirebaseProjectId(): string {
-  if (process.env.FIREBASE_PROJECT_ID) {
-    return process.env.FIREBASE_PROJECT_ID;
-  }
-  try {
-    const raw = fs.readFileSync(path.join(__dirname, 'firebase-applet-config.json'), 'utf8');
-    const parsed = JSON.parse(raw) as { projectId?: string };
-    if (parsed.projectId) return parsed.projectId;
-  } catch {
-    // Fallback below
-  }
-  return 'caplenhvrsb';
-}
+  const candidatePaths = [
+    path.join(__dirname, 'firebase-applet-config.json'),
+    path.join(process.cwd(), 'firebase-applet-config.json'),
+  ];
 
-const FIREBASE_PROJECT_ID = resolveFirebaseProjectId();
+  let configProjectId = '';
+  for (const configPath of candidatePaths) {
+    try {
+      if (!fs.existsSync(configPath)) continue;
+      const raw = fs.readFileSync(configPath, 'utf8');
+      const parsed = JSON.parse(raw) as { projectId?: string };
+      const pid = typeof parsed.projectId === 'string' ? parsed.projectId.trim() : '';
+      if (pid && pid !== 'remixed-project-id') {
+        configProjectId = pid;
+        break;
+      }
+    } catch {
+      // Try next candidate path
+    }
+  }
+
+  const envProjectId = (process.env.FIREBASE_PROJECT_ID || '').trim();
+  if (configProjectId) {
+    if (envProjectId && envProjectId !== configProjectId) {
+      console.warn(
+        `[Auth] Cảnh báo: FIREBASE_PROJECT_ID ("${envProjectId}") khác với projectId trong firebase-applet-config.json ("${configProjectId}"). Đang ưu tiên dùng "${configProjectId}" để khớp với cấu hình đăng nhập trình duyệt.`
+      );
+    }
+    return configProjectId;
+  }
+
+  if (envProjectId) {
+    return envProjectId;
+  }
+
+  return 'gen-lang-client-0506409531';
+}
 
 // Khởi tạo Gemini client trên Server-side
 const apiKey = process.env.GEMINI_API_KEY || '';
@@ -113,7 +136,7 @@ export async function createApp(options: CreateAppOptions = {}) {
         });
       }
 
-      const verified = await verifyToken(idToken, FIREBASE_PROJECT_ID);
+      const verified = await verifyToken(idToken, resolveFirebaseProjectId());
 
       // Thu hồi phiên cũ nếu trình duyệt gửi kèm phiên cũ
       const existingToken = extractSessionTokenFromRequest(req);

@@ -150,10 +150,20 @@ export async function verifyFirebaseIdToken(
   if (typeof payload.auth_time === 'number' && payload.auth_time > nowSec + 300) {
     throw new Error('Thời điểm xác thực Firebase ID Token không hợp lệ.');
   }
-  if (payload.aud !== expectedProjectId) {
+  const expected = (expectedProjectId || '').trim();
+  if (!expected) {
+    throw new Error('Hệ thống chưa cấu hình Firebase Project ID hợp lệ.');
+  }
+  if (payload.aud !== expected) {
+    console.warn(
+      `[Auth] Firebase ID Token projectId mismatch: token.aud="${String(payload.aud || '')}", expected="${expected}"`
+    );
     throw new Error('Firebase ID Token không khớp projectId hệ thống.');
   }
-  if (payload.iss !== `https://securetoken.google.com/${expectedProjectId}`) {
+  if (payload.iss !== `https://securetoken.google.com/${expected}`) {
+    console.warn(
+      `[Auth] Firebase ID Token issuer mismatch: token.iss="${String(payload.iss || '')}", expected="https://securetoken.google.com/${expected}"`
+    );
     throw new Error('Nguồn phát hành Firebase ID Token không hợp lệ.');
   }
   if (typeof payload.sub !== 'string' || payload.sub.trim() === '' || payload.sub.length > 128) {
